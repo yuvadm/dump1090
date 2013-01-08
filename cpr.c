@@ -28,31 +28,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <errno.h>
-#include <unistd.h>
 #include <math.h>
-#include <sys/time.h>
-#include <fcntl.h>
-#include <ctype.h>
+#include "cpr.h"
 
 #define LATZ 15
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
-
-/* decoded coordinates */
-struct dec_location {
-    float lat;
-    float lng;
-};
-
-/* encoded coordinates */
-struct enc_location {
-    int lat;
-    int lng;
-};
 
 /* CPR decoding functions.
  * Decoding depends on type 0 for even messages and type 1 for odd.
