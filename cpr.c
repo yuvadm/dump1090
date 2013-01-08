@@ -69,8 +69,24 @@ float dlat(int type, int surface) {
         return res;
 }
 
-float dlon(lat, type, surface) {
+float dlng(float dec_lat, int type, int surface) {
     float res = (surface != 0) ? 90.0 : 360.0;
-    int nl_val = MAX(nl(lat) - type, 1);
+    int nl_val = MAX(nl(dec_lat) - type, 1);
     return res / nl_val;
+}
+
+float decode_lat(int enc_lat, int type, int surface, float recv_lat) {
+    float t1 = dlat(type, surface);
+    float t2 = ((float) enc_lat) / pow(2, 17);
+    float j = floor(recv_lat / t1) +
+        floor(0.5 + (fmod(recv_lat, t1) / t1) - t2);
+    return t1 * (j + t2);
+}
+
+float decode_lng(float dec_lat, int enc_lon, int type, int surface, float recv_lng) {
+    float t1 = dlng(dec_lat, type, surface);
+    float t2 = ((float) enc_lon) / pow(2, 17);
+    float m = floor(recv_lng / t1) +
+        floor(0.5 + (fmod(recv_lng, t1) / t1) - t2);
+    return t1 * (m + t2);
 }
