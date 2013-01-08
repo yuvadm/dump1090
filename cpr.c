@@ -40,6 +40,7 @@
 #include <ctype.h>
 
 #define LATZ 15
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 /* CPR decoding functions.
  * Decoding depends on type 0 for even messages and type 1 for odd.
@@ -59,15 +60,17 @@ float nl(float latitude) {
     );
 }
 
-float decode_lat(int type, int surface) {
-    float res = 0.0;
-    if (surface == 1)
-        res = 90.0;
-    else
-        res = 360.0;
+float dlat(int type, int surface) {
+    float res = (surface != 0) ? 90.0 : 360.0;
     int nz_val = nz(type);
     if (nz_val != 0)
         return res / nz_val;
     else
         return res;
+}
+
+float dlon(latitude, type, surface) {
+    float res = (surface != 0) ? 90.0 : 360.0;
+    int nl_val = MAX(nl(latitude) - type, 1);
+    return res / nl_val;
 }
