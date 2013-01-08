@@ -42,6 +42,18 @@
 #define LATZ 15
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
+/* decoded coordinates */
+struct dec_location {
+    float lat;
+    float lng;
+};
+
+/* encoded coordinates */
+struct enc_location {
+    int lat;
+    int lng;
+};
+
 /* CPR decoding functions.
  * Decoding depends on type 0 for even messages and type 1 for odd.
  * Surface == 0 for airborne positions, 1 for surface */
@@ -89,4 +101,13 @@ float decode_lng(float dec_lat, int enc_lon, int type, int surface, float recv_l
     float m = floor(recv_lng / t1) +
         floor(0.5 + (fmod(recv_lng, t1) / t1) - t2);
     return t1 * (m + t2);
+}
+
+struct dec_location *cpr_resolve_local(struct dec_location *recv_loc, struct enc_location *loc, int type, int surface) {
+    float dec_lat = decode_lat(loc->lat, type, surface, recv_loc->lat);
+    float dec_lng = decode_lng(dec_lat, loc->lng, type, surface, recv_loc->lng);
+    struct dec_location *dec_loc = malloc(sizeof(*dec_loc));
+    dec_loc->lat = dec_lat;
+    dec_loc->lng = dec_lng;
+    return dec_loc;
 }
