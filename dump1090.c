@@ -84,6 +84,8 @@ struct aircraft {
     char flight[9];     /* Flight number */
     int altitude;       /* Altitude */
     int speed;          /* Velocity computed from EW and NS components. */
+    int latitude;       /* Raw latitude */
+    int longitude;      /* Raw longitude */
     time_t seen;        /* Time at which the last packet was received. */
     long messages;      /* Number of Mode S messages received. */
     struct aircraft *next; /* Next aircraft in our linked list. */
@@ -1202,6 +1204,8 @@ struct aircraft *interactiveCreateAircraft(uint32_t addr) {
     snprintf(a->hexaddr,sizeof(a->hexaddr),"%06x",(int)addr);
     a->flight[0] = '\0';
     a->altitude = 0;
+    a->latitude = 0;
+    a->longitude = 0;
     a->seen = time(NULL);
     a->messages = 0;
     a->next = NULL;
@@ -1263,6 +1267,8 @@ void interactiveReceiveData(struct modesMessage *mm) {
             memcpy(a->flight, mm->flight, sizeof(a->flight));
         } else if (mm->metype >= 9 && mm->metype <= 18) {
             a->altitude = mm->altitude;
+            a->latitude = mm->raw_latitude;
+            a->longitude = mm->raw_longitude;
         } else if (mm->metype == 19) {
             if (mm->mesub == 1 || mm->mesub == 2) {
                 a->speed = mm->velocity;
@@ -1283,12 +1289,12 @@ void interactiveShowData(void) {
     progress[3] = '\0';
 
     printf("\x1b[H\x1b[2J");    /* Clear the screen */
-    printf("Hex    Flight   Altitude  Speed     Messages  Seen  %s\n",
+    printf("Hex    Flight   Altitude  Speed   Latitude  Longitude  Messages  Seen  %s\n",
             progress);
-    printf("-------------------------------------------------------\n");
+    printf("--------------------------------------------------------------------------\n");
     while(a && count < Modes.interactive_rows) {
-        printf("%-6s %-8s %-9d %-9d %-9ld %d sec ago\n",
-            a->hexaddr, a->flight, a->altitude, a->speed, a->messages,
+        printf("%-6s %-8s %-9d %-7d %-9d %-10d %-9ld %d sec ago\n",
+            a->hexaddr, a->flight, a->altitude, a->speed, a->latitude, a->longitude, a->messages,
             (int)(now - a->seen));
         a = a->next;
         count++;
