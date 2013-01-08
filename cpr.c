@@ -50,13 +50,13 @@ int nz(int type) {
     return 4 * LATZ - type;
 }
 
-float nl(float latitude) {
-    if (abs(latitude) >= 87.0)
+float nl(float lat) {
+    if (abs(lat) >= 87.0)
         return 1.0;
     return floor(
         (2.0 * M_PI) *
         pow(acos(1.0 - (1.0 - cos(M_PI / (2.0 * LATZ))) /
-            pow(cos((M_PI / 180.0) * abs(latitude)), 2)), -1)
+            pow(cos((M_PI / 180.0) * abs(lat)), 2)), -1)
     );
 }
 
@@ -69,8 +69,8 @@ float dlat(int type, int surface) {
         return res;
 }
 
-float dlon(latitude, type, surface) {
+float dlon(lat, type, surface) {
     float res = (surface != 0) ? 90.0 : 360.0;
-    int nl_val = MAX(nl(latitude) - type, 1);
+    int nl_val = MAX(nl(lat) - type, 1);
     return res / nl_val;
 }
