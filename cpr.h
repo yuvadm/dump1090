@@ -44,11 +44,7 @@ struct enc_location {
  * Decoding depends on type 0 for even messages and type 1 for odd.
  * Surface == 0 for airborne positions, 1 for surface */
 
-int nz(int type);
-float nl(float lat);
-float dlat(int type, int surface);
-float dlng(float dec_lat, int type, int surface);
-float decode_lat(int enc_lat, int type, int surface, float recv_lat);
-float decode_lng(float dec_lat, int enc_lon, int type, int surface, float recv_lng);
 struct dec_location *cpr_resolve_local(struct dec_location *recv_loc,
         struct enc_location *loc, int type, int surface);
+struct dec_location *cpr_resolve_global(struct enc_location *even, 
+        struct enc_location *odd, struct dec_location *recv, int recent_type, int surface);

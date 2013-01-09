@@ -40,6 +40,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include "rtl-sdr.h"
+#include "cpr.h"
 
 #define MODES_DEFAULT_RATE         2000000
 #define MODES_DEFAULT_FREQ         1090000000
@@ -1382,7 +1383,24 @@ int main(int argc, char **argv) {
         } else if (!strcmp(argv[j],"--snip") && more) {
             snipMode(atoi(argv[++j]));
             exit(0);
-        } else if (!strcmp(argv[j],"--help")) {
+        } else if (!strcmp(argv[j],"--cprtest")) {
+            printf("CPR test...\n");
+            struct enc_location l1;
+            l1.lat = 43969;
+            l1.lng = 107202;
+            struct enc_location l2;
+            l2.lat = 32328;
+            l2.lng = 94540;
+            struct dec_location recv;
+            recv.lat = 32.083;
+            recv.lng = 34.800;
+            // struct dec_location *res = cpr_resolve_local(&recv, &l1, 0, 0);
+            // printf("local= lat: %f, long: %f\n", res->lat, res->lng);
+            struct dec_location *res = cpr_resolve_global(&l1, &l2, &recv, 0, 0);
+            printf("global= lat: %f, long: %f\n", res->lat, res->lng);
+            exit(0);
+        }
+        else if (!strcmp(argv[j],"--help")) {
             showHelp();
             exit(0);
         } else {

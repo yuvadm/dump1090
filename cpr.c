@@ -53,17 +53,17 @@ float nl(float lat) {
 }
 
 float dlat(int type, int surface) {
-    float res = (surface != 0) ? 90.0 : 360.0;
+    float res = surface ? 90.0 : 360.0;
     int nz_val = nz(type);
-    if (nz_val != 0)
+    if (nz_val)
         return res / nz_val;
     else
         return res;
 }
 
 float dlng(float dec_lat, int type, int surface) {
-    float res = (surface != 0) ? 90.0 : 360.0;
-    int nl_val = MAX(nl(dec_lat) - type, 1);
+    float res = surface ? 90.0 : 360.0;
+    float nl_val = MAX(nl(dec_lat) - type, 1);
     return res / nl_val;
 }
 
@@ -83,11 +83,73 @@ float decode_lng(float dec_lat, int enc_lon, int type, int surface, float recv_l
     return t1 * (m + t2);
 }
 
-struct dec_location *cpr_resolve_local(struct dec_location *recv_loc, struct enc_location *loc, int type, int surface) {
-    float dec_lat = decode_lat(loc->lat, type, surface, recv_loc->lat);
-    float dec_lng = decode_lng(dec_lat, loc->lng, type, surface, recv_loc->lng);
+struct dec_location *cpr_resolve_local(struct dec_location *recv, 
+        struct enc_location *loc, int type, int surface) {
+    float dec_lat = decode_lat(loc->lat, type, surface, recv->lat);
+    float dec_lng = decode_lng(dec_lat, loc->lng, type, surface, recv->lng);
     struct dec_location *dec_loc = malloc(sizeof(*dec_loc));
     dec_loc->lat = dec_lat;
     dec_loc->lng = dec_lng;
+    return dec_loc;
+}
+
+struct dec_location *cpr_resolve_global(struct enc_location *even, 
+        struct enc_location *odd, struct dec_location *recv, int recent_type, int surface) {
+    float dlat_even = dlat(0, surface);
+    float dlat_odd = dlat(1, surface);
+
+    float even_lat = (float) even->lat;
+    float even_lng = (float) even->lng;
+    float odd_lat = (float) odd->lat;
+    float odd_lng = (float) odd->lng;
+
+    /* latitude index */
+    float j = floor(((nz(1) * even_lat - nz(0) * odd_lat) /
+        pow(2,17)) + 0.5);
+
+    float rlat_even = dlat_even * ((fmod(j, nz(0))) + even_lat / pow(2,17));
+    float rlat_odd = dlat_odd * ((fmod(j, nz(1))) + odd_lat / pow(2,17));
+
+    if (rlat_even > 270.0)
+        rlat_even -= 360.0;
+    if (rlat_odd > 270.0)
+        rlat_odd -= 360.0;
+
+    if (nl(rlat_even) != nl(rlat_odd))
+        return 0;
+
+    float rlat = recent_type ? rlat_odd : rlat_even;
+
+    if (surface && recv->lat < 0)
+        rlat -= 90.0;
+
+    float dl = dlng(rlat, recent_type, surface);
+    float nl_rlat = nl(rlat);
+
+    /* longitude index */
+    float m = floor((((nl_rlat - 1) * even_lng - nl_rlat * odd_lng) / 
+        pow(2,17)) + 0.5);
+
+    printf("%f %f\n", dl, nl_rlat);
+
+    float enc_lon = recent_type ? odd_lng : even_lng;
+
+    float rlng = dl * ((fmod(m, MAX(nl_rlat - recent_type, 1))) + enc_lon / pow(2,17));
+
+    if (surface) {
+        float wat = recv->lng;
+        if (wat < 0)
+            wat += 360.0;
+        wat = 90 * ((int) wat / 90);
+        rlng += (wat - (90 * ((int) rlng / 90)));
+    }
+
+    if (rlng > 180) {
+        rlng -= 360.0;
+    }
+
+    struct dec_location *dec_loc = malloc(sizeof(*dec_loc));
+    dec_loc->lat = rlat;
+    dec_loc->lng = rlng;
     return dec_loc;
 }
